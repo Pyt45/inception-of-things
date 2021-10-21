@@ -1,17 +1,58 @@
-require 'yaml'
+# require 'yaml'
 
-conf = YAMl.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
+# conf = YAMl.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
+
+
+# Vagrant.configure("2") do |config|
+#  config.vm.box = conf.fetch("box")
+#  config.vm.provider "virtualbox" do |v|
+#    v.memory = conf.fetch("vm").fetch("memory")
+#    v.cpu = conf.fetch("vm").fetch("cpu")
+#  end
+#  config.vm.define "master" do |master|
+#    master.vm.hostname = conf.fetch("master").fetch("hostname")
+#    master.vm.network "private_network", ip: conf.fetch("master").fetch("ip")
+#    master.vm.provision "shell", path: "script/master.sh"
+#    master.vm.provider "virtualbox" do |vb|
+#      vb.customize ["modifyvm", :id, "--name", "master"]
+#      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+#      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+#    end
+#  end
+#  config.vm.define "worker" do |worker|
+#    worker.vm.hostname = conf.fetch("worker").fetch("hostname")
+#    worker.vm.network "private_network", ip: conf.fetch("worker").fetch("ip")
+#    worker.vm.provision "shell", path: "script/worker.sh"
+#    worker.vm.provider "virtualbox" do |vb|
+#      vb.customize ["modifyvm", :id, "--name", "worker"]
+#      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+#      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+#    end
+#  end
+#end
+
+#require 'yaml'
+
+#conf = YAML.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
 
 Vagrant.configure("2") do |config|
-  config.vm.box = conf.fetch("box")
+  config.vm.box = "centos/8"
   config.vm.provider "virtualbox" do |v|
-    v.memory = conf.fetch("vm").fetch("memory")
-    v.cpu = conf.fetch("vm").fetch("cpu")
+    v.memory = 1024
+    v.cpus = 2
   end
+  # curl -sfL https://get.k3s.io
+  config.vm.provision "shell", inline: "curl -sfL https://get.k3s.io > k3d_setup.sh"
+
   config.vm.define "master" do |master|
-    master.vm.hostname = conf.fetch("master").fetch("hostname")
-    master.vm.network "private_network", ip: conf.fetch("master").fetch("ip")
-    master.vm.provision "shell", path: "script/master.sh"
+    master.vm.hostname = "master"
+    master.vm.network "private_network", ip: 192.168.42.110
+    master.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/key.pub"
+    master.vm.provision "file", source: "script/master.sh", destination: "master.sh"
+    # master.vm.provision "shell", path: "script/master.sh"
+    master.trigger.after :up do |trigger|
+      trigger.run_remote = {path: "master.sh"}
+    end
     master.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--name", "master"]
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
@@ -19,9 +60,14 @@ Vagrant.configure("2") do |config|
     end
   end
   config.vm.define "worker" do |worker|
-    worker.vm.hostname = conf.fetch("worker").fetch("hostname")
-    worker.vm.network "private_network", ip: conf.fetch("worker").fetch("ip")
-    worker.vm.provision "shell", path: "script/worker.sh"
+    worker.vm.hostname = "worker"
+    worker.vm.network "private_network", ip: 192.168.42.111
+    worker.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/key.pub"
+    master.vm.provision "file", source: "script/worker.sh", destination: "worker.sh"
+    # worker.vm.provision "shell", path: "script/worker.sh"
+    master.trigger.after :up do |trigger|
+      trigger.run_remote = {path: "worker.sh"}
+    end
     worker.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--name", "worker"]
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
