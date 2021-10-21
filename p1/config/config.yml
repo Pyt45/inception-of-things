@@ -1,0 +1,11 @@
+box: centos/8
+vm:
+  memory: 1024
+  cpu: 2
+
+master:
+  ip: 192.168.42.110
+  hostname: master
+worker:
+  ip: 192.168.42.111
+  hostname: worker
