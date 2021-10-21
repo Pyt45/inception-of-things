@@ -12,6 +12,7 @@
 ```ruby
 require 'yaml' # require the yaml plugin to load yaml file
 conf = YAML.load_file(FILE.join(FILE.dirname(__FILE__), 'path/to/yaml')) # yaml file works a .env in this partical case
+box = conf.fetch("box") # Load box form yaml file
 Vagrant.configure("2") do |config|
   # global configuration for all the machines
   config.vm.box = "centos/8" # the image used in the vm

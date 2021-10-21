@@ -3,14 +3,14 @@ require 'yaml'
 conf = YAMl.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
 
 Vagrant.configure("2") do |config|
-  config.vm.box = conf["box"]
+  config.vm.box = conf.fetch("box")
   config.vm.provider "virtualbox" do |v|
-    v.memory = conf["vm"].memory
-    v.cpu = conf["vm"].cpu
+    v.memory = conf.fetch("vm").fetch("memory")
+    v.cpu = conf.fetch("vm").fetch("cpu")
   end
   config.vm.define "master" do |master|
-    master.vm.hostname = conf["master"].hostname
-    master.vm.network "private_network", ip: conf["master"].ip
+    master.vm.hostname = conf.fetch("master").fetch("hostname")
+    master.vm.network "private_network", ip: conf.fetch("master").fetch("ip")
     master.vm.provision "shell", path: "script/master.sh"
     master.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--name", "master"]
@@ -19,8 +19,8 @@ Vagrant.configure("2") do |config|
     end
   end
   config.vm.define "worker" do |worker|
-    worker.vm.hostname = conf["worker"].hostname
-    worker.vm.network "private_network", conf["worker"].ip
+    worker.vm.hostname = conf.fetch("worker").fetch("hostname")
+    worker.vm.network "private_network", ip: conf.fetch("worker").fetch("ip")
     worker.vm.provision "shell", path: "script/worker.sh"
     worker.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--name", "worker"]
