@@ -31,9 +31,9 @@
 #  end
 #end
 
-#require 'yaml'
+# require 'yaml'
 
-#conf = YAML.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
+# conf = YAML.load_file(FILE.join(FILE.dirname(__FILE__), 'config/config.yaml'))
 
 Vagrant.configure("2") do |config|
   config.vm.box = "centos/8"

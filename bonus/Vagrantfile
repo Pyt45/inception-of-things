@@ -1,0 +1,14 @@
+require 'yaml'
+
+vagrantRoot = File.join(File.dirname(__FILE__), "config.yaml")
+
+if not Pathname(vagrantRoot).exist?
+    fail "yaml not found"
+end
+
+conf = YAML.load_file(vagrantRoot)
+
+Vagrant.configure("2") do |config|
+    config.vm.box = conf.fetch("box")
+    config.vm.provision "shell", inline: "echo yey"
+end
